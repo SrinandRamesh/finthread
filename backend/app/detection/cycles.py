@@ -88,7 +88,7 @@ def detect_cycles(
 
     for cyc in cycle_gen:
         count += 1
-        if count > 500:
+        if count > 5000:
             break
 
         k = len(cyc)
@@ -127,71 +127,70 @@ def detect_cycles(
     hits: list[PatternHit] = []
     max_span = timedelta(hours=cfg.CYCLE_MAX_SPAN_HOURS)
 
-    for cyc in candidate_cycles:
-        k = len(cyc)
-        # We try cycles starting at each possible rotation or from cyc[0]
-        # Contract: start from an a->b transaction at t0 (try up to 20 starts, earliest first)
-        u0, u1 = cyc[0], cyc[1]
-        first_hop_txs = txs_by_pair.get((u0, u1), [])
-        if not first_hop_txs:
-            continue
+    for base_cyc in candidate_cycles:
+        k = len(base_cyc)
+        # simple_cycles may return any rotation of the cycle (e.g. [B, C, A] for A->B->C->A),
+        # so try every rotation as the starting account, not just base_cyc[0].
+        found = False
+        for r in range(k):
+            if found:
+                break
+            cyc = base_cyc[r:] + base_cyc[:r]
+            u0, u1 = cyc[0], cyc[1]
+            first_hop_txs = txs_by_pair.get((u0, u1), [])
+            for start_tx in first_hop_txs[:20]:
+                t0 = start_tx["timestamp"]
+                chosen_txs = [start_tx]
+                prev_ts = t0
+                valid = True
 
-        for start_tx in first_hop_txs[:20]:
-            t0 = start_tx["timestamp"]
-            chosen_txs = [start_tx]
-            prev_ts = t0
-            valid = True
+                for hop_idx in range(1, k):
+                    hop_u = cyc[hop_idx]
+                    hop_v = cyc[(hop_idx + 1) % k]
+                    candidates = txs_by_pair.get((hop_u, hop_v), [])
 
-            for hop_idx in range(1, k):
-                hop_u = cyc[hop_idx]
-                hop_v = cyc[(hop_idx + 1) % k]
-                candidates = txs_by_pair.get((hop_u, hop_v), [])
+                    # Earliest transaction strictly after previous hop
+                    next_tx = None
+                    for candidate in candidates:
+                        if candidate["timestamp"] > prev_ts:
+                            next_tx = candidate
+                            break
 
-                # Earliest transaction strictly after previous hop
-                next_tx = None
-                for candidate in candidates:
-                    if candidate["timestamp"] > prev_ts:
-                        next_tx = candidate
+                    if next_tx is None or next_tx["timestamp"] - t0 > max_span:
+                        valid = False
                         break
 
-                if next_tx is None:
-                    valid = False
-                    break
+                    chosen_txs.append(next_tx)
+                    prev_ts = next_tx["timestamp"]
 
-                if next_tx["timestamp"] - t0 > max_span:
-                    valid = False
-                    break
+                if valid and len(chosen_txs) == k:
+                    # Found time-respecting cycle sequence
+                    tx_ids = [t["tx_id"] for t in chosen_txs]
+                    start_time = chosen_txs[0]["timestamp"]
+                    end_time = chosen_txs[-1]["timestamp"]
+                    span_hours = round(max(0.0, (end_time - start_time).total_seconds() / 3600.0), 2)
+                    total_amount = float(sum(t["amount"] for t in chosen_txs))
+                    first_amt = chosen_txs[0]["amount"]
+                    last_amt = chosen_txs[-1]["amount"]
+                    amount_retention = round(last_amt / first_amt, 4) if first_amt > 0 else 0.0
 
-                chosen_txs.append(next_tx)
-                prev_ts = next_tx["timestamp"]
-
-            if valid and len(chosen_txs) == k:
-                # Found time-respecting cycle sequence
-                tx_ids = [t["tx_id"] for t in chosen_txs]
-                start_time = chosen_txs[0]["timestamp"]
-                end_time = chosen_txs[-1]["timestamp"]
-                span_hours = round(max(0.0, (end_time - start_time).total_seconds() / 3600.0), 2)
-                total_amount = float(sum(t["amount"] for t in chosen_txs))
-                first_amt = chosen_txs[0]["amount"]
-                last_amt = chosen_txs[-1]["amount"]
-                amount_retention = round(last_amt / first_amt, 4) if first_amt > 0 else 0.0
-
-                hit = PatternHit(
-                    pattern_id="",
-                    pattern_type="CYCLE",
-                    focal_account=cyc[0],
-                    accounts=list(cyc),
-                    transaction_ids=tx_ids,
-                    start_time=start_time,
-                    end_time=end_time,
-                    total_amount=total_amount,
-                    metrics={
-                        "cycle_length": float(k),
-                        "span_hours": span_hours,
-                        "amount_retention": amount_retention,
-                    },
-                )
-                hits.append(hit)
-                break  # stop trying starts for this cycle
+                    hit = PatternHit(
+                        pattern_id="",
+                        pattern_type="CYCLE",
+                        focal_account=cyc[0],
+                        accounts=list(cyc),
+                        transaction_ids=tx_ids,
+                        start_time=start_time,
+                        end_time=end_time,
+                        total_amount=total_amount,
+                        metrics={
+                            "cycle_length": float(k),
+                            "span_hours": span_hours,
+                            "amount_retention": amount_retention,
+                        },
+                    )
+                    hits.append(hit)
+                    found = True
+                    break  # stop trying starts for this cycle
 
     return hits
