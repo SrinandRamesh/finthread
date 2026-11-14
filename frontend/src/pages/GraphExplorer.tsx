@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { getGraph, getPatterns } from '../api/endpoints';
 import GraphCanvas from '../components/graph/GraphCanvas';

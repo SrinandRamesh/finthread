@@ -3,6 +3,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Activity, Upload, List, GitBranch, Layers, Shield, BarChart2 } from 'lucide-react';
 import OverviewPage from './pages/Overview';
 import GraphExplorerPage from './pages/GraphExplorer';
+import UploadPageImpl from './pages/Upload';
+import TransactionsPage from './pages/Transactions';
+import ClustersPage from './pages/Clusters';
+import ClusterDetailPage from './pages/ClusterDetail';
+import AccountDetailPage from './pages/AccountDetail';
+import RiskTypologyPage from './pages/RiskTypology';
+import EvaluationPage from './pages/Evaluation';
 
 function Landing() {
   return (
@@ -20,24 +27,15 @@ function Landing() {
   );
 }
 
-function PageShell({ title }: { title: string }) {
-  return (
-    <div style={{ padding: 32 }}>
-      <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: 40, color: '#2A1F16', fontWeight: 600 }}>{title}</h1>
-      <p style={{ fontFamily: 'Manrope, sans-serif', color: '#6B5A48', marginTop: 8 }}>Coming soon…</p>
-    </div>
-  );
-}
-
 function Overview() { return <OverviewPage />; }
-function UploadPage() { return <PageShell title="Upload Data" />; }
-function Transactions() { return <PageShell title="Transactions" />; }
+function UploadPage() { return <UploadPageImpl />; }
+function Transactions() { return <TransactionsPage />; }
 function GraphExplorer() { return <GraphExplorerPage />; }
-function Clusters() { return <PageShell title="Clusters" />; }
-function ClusterDetail() { return <PageShell title="Cluster Investigation" />; }
-function AccountDetail() { return <PageShell title="Account" />; }
-function RiskTypology() { return <PageShell title="Risk & Typology" />; }
-function Evaluation() { return <PageShell title="Evaluation" />; }
+function Clusters() { return <ClustersPage />; }
+function ClusterDetail() { return <ClusterDetailPage />; }
+function AccountDetail() { return <AccountDetailPage />; }
+function RiskTypology() { return <RiskTypologyPage />; }
+function Evaluation() { return <EvaluationPage />; }
 
 const NAV = [
   { to: '/dashboard', icon: <Activity size={18} />, label: 'Overview' },

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import cytoscape from 'cytoscape';
 import fcose from 'cytoscape-fcose';
 import type { GraphOut, GraphNode, GraphEdge } from '../../types/contract';
