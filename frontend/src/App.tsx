@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router
 import { AnimatePresence, motion } from 'framer-motion';
 import { Activity, Upload, List, GitBranch, Layers, Shield, BarChart2 } from 'lucide-react';
 import OverviewPage from './pages/Overview';
+import GraphExplorerPage from './pages/GraphExplorer';
 
 function Landing() {
   return (
@@ -31,7 +32,7 @@ function PageShell({ title }: { title: string }) {
 function Overview() { return <OverviewPage />; }
 function UploadPage() { return <PageShell title="Upload Data" />; }
 function Transactions() { return <PageShell title="Transactions" />; }
-function GraphExplorer() { return <PageShell title="Graph Explorer" />; }
+function GraphExplorer() { return <GraphExplorerPage />; }
 function Clusters() { return <PageShell title="Clusters" />; }
 function ClusterDetail() { return <PageShell title="Cluster Investigation" />; }
 function AccountDetail() { return <PageShell title="Account" />; }
