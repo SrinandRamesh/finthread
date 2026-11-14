@@ -1,16 +1,12 @@
-"""TEMPORARY STUB created by the Integration Lead at kickoff.
-Member 3 owns this package and replaces this file on feat/intel.
-Signatures are fixed by PROJECT_CONTRACT.md Section 7."""
-import pandas as pd
+"""Baseline + evaluation package (Member 3).
 
-from app.config import Settings
-from app.contracts import BaselineOutput, EvaluationResult, ScoredCluster
+Public API called by Member 2's pipeline.py:
+    run_baseline(transactions, cfg)                     -> BaselineOutput
+    evaluate(transactions, clusters, baseline, cfg)     -> EvaluationResult (dict shaped like EvaluationOut)
+"""
+from __future__ import annotations
 
+from app.evaluation.baseline import run_baseline
+from app.evaluation.metrics import evaluate
 
-def run_baseline(transactions: pd.DataFrame, cfg: Settings) -> BaselineOutput:
-    return BaselineOutput(flagged_transaction_ids=set(), rules_triggered={})
-
-
-def evaluate(transactions: pd.DataFrame, clusters: list[ScoredCluster],
-             baseline: BaselineOutput, cfg: Settings) -> EvaluationResult:
-    return {"available": False, "reason": "Evaluation not implemented yet"}
+__all__ = ["run_baseline", "evaluate"]
