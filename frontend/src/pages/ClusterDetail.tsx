@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getCluster } from '../api/endpoints';
 import GraphCanvas from '../components/graph/GraphCanvas';
 import { formatDate, formatDuration, formatINR } from '../lib/format';
@@ -26,7 +27,7 @@ export default function ClusterDetail() {
       <Grid cols={5}>
         <div style={{ background: C.ivory, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20 }}>
           <div style={{ fontFamily: F.ui, fontSize: 12, color: C.cocoa }}>Risk score</div>
-          <div style={{ fontFamily: F.display, fontSize: 44, fontWeight: 600, color, lineHeight: 1.1 }}>{c.risk_score}<span style={{ fontSize: 18, color: C.stone }}>/100</span></div>
+          <div style={{ display: 'flex', alignItems: 'baseline' }}><motion.div layoutId={`score-${c.cluster_id}`} transition={{ type: 'spring', stiffness: 260, damping: 30 }} style={{ fontFamily: F.display, fontSize: 44, fontWeight: 600, color, lineHeight: 1.1 }}>{c.risk_score}</motion.div><span style={{ fontFamily: F.display, fontSize: 18, color: C.stone }}>/100</span></div>
           <RiskBadge level={c.risk_level} />
         </div>
         <Stat label="Total moved" value={formatINR(c.total_amount)} />
@@ -56,7 +57,7 @@ export default function ClusterDetail() {
                   <span style={{ fontFamily: F.mono }}>{f.points}/{f.max_points}</span>
                 </div>
                 <div style={{ height: 8, background: C.sand, borderRadius: 4, marginTop: 6, overflow: 'hidden' }}>
-                  <div style={{ width: `${(f.points / f.max_points) * 100}%`, height: '100%', background: f.points ? C.gold : 'transparent', borderRadius: 4 }} />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${(f.points / f.max_points) * 100}%` }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.3 }} style={{ height: '100%', background: f.points ? C.teal : 'transparent', borderRadius: 4 }} />
                 </div>
                 <div style={{ fontFamily: F.ui, fontSize: 12, color: C.cocoa, marginTop: 4 }}>{f.reason}</div>
               </div>

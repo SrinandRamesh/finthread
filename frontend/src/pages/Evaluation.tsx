@@ -1,10 +1,29 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { analyze, getEvaluation } from '../api/endpoints';
 import type { ModelMetrics } from '../types/contract';
-import { Btn, C, F, Card, ErrorState, Grid, Loading, Page, mono, num, pct, td, th, useLoad } from '../components/ui';
+import { Btn, C, F, Card, CountUp, ErrorState, Grid, Loading, Page, mono, num, pct, td, th, useLoad } from '../components/ui';
 
 const MODEL_COLOR: Record<string, string> = { graph: C.olive, baseline: C.slate };
+
+
+function Gauge({ value, label, color, delay }: { value: number; label: string; color: string; delay: number }) {
+  const r = 58, circ = 2 * Math.PI * r;
+  return (
+    <div style={{ position: 'relative', width: 150, height: 150 }}>
+      <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+        <circle cx="75" cy="75" r={r} fill="none" stroke="rgba(255,255,255,.14)" strokeWidth="10" />
+        <motion.circle cx="75" cy="75" r={r} fill="none" stroke={color} strokeWidth="10" strokeLinecap="round" transform="rotate(-90 75 75)"
+          strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: circ * (1 - value) }} transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1], delay }} />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: '#E9E8F8' }}><CountUp to={value * 100} format={v => `${v.toFixed(1)}%`} duration={1.6} /></div>
+        <div style={{ fontFamily: F.ui, fontSize: 11.5, color: 'rgba(255,255,255,.65)' }}>{label}</div>
+      </div>
+    </div>
+  );
+}
 
 function ModelCard({ m }: { m: ModelMetrics }) {
   const color = MODEL_COLOR[m.model];
@@ -26,7 +45,7 @@ function ModelCard({ m }: { m: ModelMetrics }) {
 function Matrix({ m }: { m: ModelMetrics }) {
   const { tp, fp, fn, tn } = m.confusion_matrix;
   const cell = (v: number, label: string, good: boolean) => (
-    <div style={{ background: good ? '#E4EDDD' : '#F8E1D9', borderRadius: 10, padding: 16, textAlign: 'center' }}>
+    <div style={{ background: good ? '#DCF0EA' : '#FFE7DE', borderRadius: 10, padding: 16, textAlign: 'center' }}>
       <div style={{ fontFamily: F.display, fontSize: 30, fontWeight: 600, color: good ? C.olive : C.terracotta }}>{v.toLocaleString('en-IN')}</div>
       <div style={{ fontFamily: F.ui, fontSize: 12, color: C.cocoa, marginTop: 2 }}>{label}</div>
     </div>
@@ -80,6 +99,24 @@ export default function Evaluation() {
       subtitle={`Transaction-level evaluation on ${data.total.toLocaleString('en-IN')} labelled transactions (${data.positives} suspicious, ${data.negatives.toLocaleString('en-IN')} normal) · labels: ${data.label_source ?? 'n/a'}`}
       actions={<Btn kind="ghost" onClick={rerun} disabled={busy}>{busy ? 'Re-running…' : 'Re-run analysis'}</Btn>}
     >
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', borderRadius: 24, overflow: 'hidden', border: `1px solid ${C.line}` }}>
+        <div style={{ background: C.ivory, padding: 28, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: C.cocoa }}>Headline result</div>
+          <div style={{ fontFamily: F.display, fontSize: 34, fontWeight: 600, color: C.espresso, lineHeight: 1.1, marginTop: 8 }}>
+            Graph detection catches <em style={{ color: C.coral }}>{data.models[0].confusion_matrix.tp}</em> of {data.positives} suspicious transactions.
+          </div>
+          <div style={{ fontFamily: F.ui, fontSize: 14, color: C.cocoa, marginTop: 10, lineHeight: 1.6 }}>
+            The rule-based baseline catches {data.models[1].confusion_matrix.tp} and raises {data.models[1].confusion_matrix.fp} false alarms.
+          </div>
+        </div>
+        <div style={{ background: 'linear-gradient(135deg, #4F7FD8 0%, #7DA6EA 70%, #F6B29E 140%)', padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
+          <Gauge value={data.models[0].f1} label="Graph F1" color={C.coral} delay={0.2} />
+          <Gauge value={data.models[1].f1} label="Rules F1" color="#B9CDF2" delay={0.4} />
+          <Gauge value={data.models[0].recall} label="Graph recall" color="#D6E6FC" delay={0.6} />
+        </div>
+      </motion.div>
+
       <Grid cols={2}>{data.models.map(m => <ModelCard key={m.model} m={m} />)}</Grid>
 
       <Card title="Precision, recall and F1">

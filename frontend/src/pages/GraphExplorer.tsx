@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useApi } from '../hooks/useApi';
 import { getGraph, getPatterns } from '../api/endpoints';
 import GraphCanvas from '../components/graph/GraphCanvas';
@@ -39,70 +40,76 @@ export default function GraphExplorer() {
     }
   }
 
-  if (loading) return <div style={{ padding: 32, fontFamily: 'Manrope, sans-serif', color: '#6B5A48' }}>Loading graph…</div>;
+  if (loading) return <div style={{ padding: 32, fontFamily: 'Manrope, sans-serif', color: '#585F7E' }}>Loading graph…</div>;
   if (error) return (
     <div style={{ padding: 32 }}>
-      <div style={{ background: '#FFFDF8', border: '1px solid #E7DAC3', borderRadius: 14, padding: 32, maxWidth: 480 }}>
-        <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 28, color: '#2A1F16', fontWeight: 600 }}>No graph data yet</h2>
-        <p style={{ fontFamily: 'Manrope, sans-serif', color: '#6B5A48', marginTop: 8 }}>Load a dataset first from the Upload page.</p>
-        <a href="/upload" style={{ display: 'inline-block', marginTop: 16, background: '#B8862F', color: '#FFFDF8', borderRadius: 10, padding: '10px 24px', fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Go to Upload →</a>
+      <div style={{ background: '#F8F8FD', border: '1px solid #D5D4EC', borderRadius: 14, padding: 32, maxWidth: 480 }}>
+        <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 28, color: '#1C2541', fontWeight: 600 }}>No graph data yet</h2>
+        <p style={{ fontFamily: 'Manrope, sans-serif', color: '#585F7E', marginTop: 8 }}>Load a dataset first from the Upload page.</p>
+        <a href="/upload" style={{ display: 'inline-block', marginTop: 16, background: '#4677D2', color: '#F8F8FD', borderRadius: 10, padding: '10px 24px', fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Go to Upload →</a>
       </div>
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
 
       {/* Left controls */}
-      <div style={{ width: 220, background: '#FFFDF8', borderRight: '1px solid #E7DAC3', padding: 20, overflowY: 'auto', flexShrink: 0 }}>
-        <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 13, color: '#2A1F16', marginBottom: 12 }}>Pattern Highlights</div>
-        {PATTERN_CHIPS.map(chip => (
-          <button key={chip.type} onClick={() => handlePatternChip(chip.type)} style={{
-            display: 'block', width: '100%', marginBottom: 8, padding: '8px 12px',
-            background: activePattern === chip.type ? '#F3E2BC' : '#FBF6EC',
-            border: activePattern === chip.type ? '1px solid #B8862F' : '1px solid #E7DAC3',
-            borderRadius: 10, fontFamily: 'Manrope, sans-serif', fontSize: 13,
-            color: activePattern === chip.type ? '#B8862F' : '#6B5A48',
-            fontWeight: activePattern === chip.type ? 600 : 400,
-            cursor: 'pointer', textAlign: 'left',
-          }}>
-            {chip.label}
-          </button>
-        ))}
+      <div style={{ width: 220, background: '#F8F8FD', borderRight: '1px solid #D5D4EC', padding: 20, overflowY: 'auto', flexShrink: 0 }}>
+        <div style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 13, color: '#1C2541', marginBottom: 12 }}>Pattern Highlights</div>
+        {PATTERN_CHIPS.map((chip, i) => {
+          const on = activePattern === chip.type;
+          return (
+            <motion.button key={chip.type} onClick={() => handlePatternChip(chip.type)} whileHover={{ x: 3 }} whileTap={{ scale: 0.97 }}
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.05 * i }}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 10, width: '100%', marginBottom: 8, padding: '10px 12px', background: 'transparent', border: `1px solid ${on ? '#4677D2' : '#D5D4EC'}`, borderRadius: 12, fontFamily: 'Manrope, sans-serif', fontSize: 13, color: on ? '#E9E8F8' : '#585F7E', fontWeight: on ? 700 : 500, cursor: 'pointer', textAlign: 'left', overflow: 'hidden' }}>
+              {on && <motion.span layoutId="chipFill" transition={{ type: 'spring', stiffness: 380, damping: 32 }} style={{ position: 'absolute', inset: 0, background: '#4677D2' }} />}
+              <span style={{ position: 'relative', width: 8, height: 8, borderRadius: 4, background: on ? '#FF9475' : '#C8CAE4' }} />
+              <span style={{ position: 'relative' }}>{chip.label}</span>
+            </motion.button>
+          );
+        })}
+        <AnimatePresence>
+          {activePattern && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ fontFamily: 'Manrope, sans-serif', fontSize: 12, color: '#4677D2', background: '#DCE7FB', borderRadius: 10, padding: '8px 10px', overflow: 'hidden' }}>
+              Highlighting {Math.round(highlightIds.size / 2)}+ accounts and transfers
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div style={{ marginTop: 24, fontFamily: 'Manrope, sans-serif', fontSize: 12, color: '#A79B8B' }}>
+        <div style={{ marginTop: 24, fontFamily: 'Manrope, sans-serif', fontSize: 12, color: '#9EA2BC' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#F8E1D9', border: '1px solid #C0502F' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FFE7DE', border: '1px solid #EC6C4E' }} />
             High risk
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FBEBD0', border: '1px solid #D9962B' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FCEED6', border: '1px solid #E39B32' }} />
             Medium risk
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#E4EDDD', border: '1px solid #5E7F4F' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#DCF0EA', border: '1px solid #3B9A84' }} />
             Low risk
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#F1ECE4', border: '1px solid #A79B8B' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ECEBF6', border: '1px solid #9EA2BC' }} />
             None
           </div>
         </div>
 
-        <div style={{ marginTop: 16, fontFamily: 'Manrope, sans-serif', fontSize: 12, color: '#A79B8B' }}>
-          <b style={{ color: '#2A1F16' }}>Gold border</b> = suspicious<br />
-          <b style={{ color: '#C0502F' }}>Red edge</b> = suspicious tx<br />
+        <div style={{ marginTop: 16, fontFamily: 'Manrope, sans-serif', fontSize: 12, color: '#9EA2BC' }}>
+          <b style={{ color: '#4677D2' }}>Teal border</b> = suspicious<br />
+          <b style={{ color: '#EC6C4E' }}>Coral edge</b> = suspicious transfer<br />
           Arrow = money direction
         </div>
 
-        <div style={{ marginTop: 16, fontFamily: 'IBM Plex Mono, monospace', fontSize: 11, color: '#A79B8B' }}>
+        <div style={{ marginTop: 16, fontFamily: 'IBM Plex Mono, monospace', fontSize: 11, color: '#9EA2BC' }}>
           {graph!.meta.node_count} nodes · {graph!.meta.edge_count} edges
-          {graph!.meta.truncated && <div style={{ color: '#D9962B', marginTop: 4 }}>⚠ Graph truncated</div>}
+          {graph!.meta.truncated && <div style={{ color: '#E39B32', marginTop: 4 }}>⚠ Graph truncated</div>}
         </div>
       </div>
 
       {/* Graph canvas */}
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ flex: 1, position: 'relative', backgroundColor: '#F3F2FB', backgroundImage: 'radial-gradient(#D5D4EC 1px, transparent 1px)', backgroundSize: '22px 22px' }}>
         <GraphCanvas
           graph={graph!}
           highlightIds={highlightIds}
@@ -113,12 +120,12 @@ export default function GraphExplorer() {
 
       {/* Right panel */}
       {(selectedNode || selectedEdge) && (
-        <div style={{ width: 280, background: '#FFFDF8', borderLeft: '1px solid #E7DAC3', padding: 20, overflowY: 'auto', flexShrink: 0 }}>
-          <button onClick={() => { setSelectedNode(null); setSelectedEdge(null); }} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer', color: '#A79B8B', fontSize: 18 }}>×</button>
+        <div style={{ width: 280, background: '#F8F8FD', borderLeft: '1px solid #D5D4EC', padding: 20, overflowY: 'auto', flexShrink: 0 }}>
+          <button onClick={() => { setSelectedNode(null); setSelectedEdge(null); }} style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer', color: '#9EA2BC', fontSize: 18 }}>×</button>
 
           {selectedNode && (
             <div>
-              <div style={{ fontFamily: 'Fraunces, serif', fontSize: 20, fontWeight: 600, color: '#2A1F16' }}>{selectedNode.label}</div>
+              <div style={{ fontFamily: 'Fraunces, serif', fontSize: 20, fontWeight: 600, color: '#1C2541' }}>{selectedNode.label}</div>
               <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   { label: 'Risk Level', value: selectedNode.risk_level.toUpperCase() },
@@ -129,20 +136,20 @@ export default function GraphExplorer() {
                   { label: 'Out Degree', value: selectedNode.out_degree },
                 ].map(r => (
                   <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Manrope, sans-serif', fontSize: 13 }}>
-                    <span style={{ color: '#6B5A48' }}>{r.label}</span>
-                    <span style={{ color: '#2A1F16', fontWeight: 500 }}>{r.value}</span>
+                    <span style={{ color: '#585F7E' }}>{r.label}</span>
+                    <span style={{ color: '#1C2541', fontWeight: 500 }}>{r.value}</span>
                   </div>
                 ))}
               </div>
               {selectedNode.patterns.length > 0 && (
                 <div style={{ marginTop: 16 }}>
-                  <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 12, color: '#6B5A48', marginBottom: 6 }}>Patterns</div>
+                  <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: 12, color: '#585F7E', marginBottom: 6 }}>Patterns</div>
                   {selectedNode.patterns.map(p => (
-                    <span key={p} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4, background: '#F3E2BC', color: '#B8862F', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontFamily: 'Manrope, sans-serif', fontWeight: 600 }}>{p}</span>
+                    <span key={p} style={{ display: 'inline-block', marginRight: 4, marginBottom: 4, background: '#DCE7FB', color: '#4677D2', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontFamily: 'Manrope, sans-serif', fontWeight: 600 }}>{p}</span>
                   ))}
                 </div>
               )}
-              <a href={`/accounts/${selectedNode.id}`} style={{ display: 'block', marginTop: 16, textAlign: 'center', background: '#B8862F', color: '#FFFDF8', borderRadius: 10, padding: '10px', fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+              <a href={`/accounts/${selectedNode.id}`} style={{ display: 'block', marginTop: 16, textAlign: 'center', background: '#4677D2', color: '#F8F8FD', borderRadius: 10, padding: '10px', fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                 Open account →
               </a>
             </div>
@@ -150,7 +157,7 @@ export default function GraphExplorer() {
 
           {selectedEdge && (
             <div>
-              <div style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 600, color: '#2A1F16' }}>Transaction</div>
+              <div style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 600, color: '#1C2541' }}>Transaction</div>
               <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[
                   { label: 'ID', value: selectedEdge.id },
@@ -161,13 +168,13 @@ export default function GraphExplorer() {
                   { label: 'Channel', value: selectedEdge.channel ?? 'N/A' },
                 ].map(r => (
                   <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'Manrope, sans-serif', fontSize: 13 }}>
-                    <span style={{ color: '#6B5A48' }}>{r.label}</span>
-                    <span style={{ color: '#2A1F16', fontWeight: 500, fontFamily: 'IBM Plex Mono, monospace', fontSize: 12 }}>{r.value}</span>
+                    <span style={{ color: '#585F7E' }}>{r.label}</span>
+                    <span style={{ color: '#1C2541', fontWeight: 500, fontFamily: 'IBM Plex Mono, monospace', fontSize: 12 }}>{r.value}</span>
                   </div>
                 ))}
               </div>
               {selectedEdge.cluster_id && (
-                <a href={`/clusters/${selectedEdge.cluster_id}`} style={{ display: 'block', marginTop: 16, textAlign: 'center', background: '#B8862F', color: '#FFFDF8', borderRadius: 10, padding: '10px', fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                <a href={`/clusters/${selectedEdge.cluster_id}`} style={{ display: 'block', marginTop: 16, textAlign: 'center', background: '#4677D2', color: '#F8F8FD', borderRadius: 10, padding: '10px', fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                   View cluster →
                 </a>
               )}

@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { animate, motion, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { loadSample } from '../api/endpoints';
 import { ApiError } from '../api/client';
 import { TYPOLOGY_LABELS, type Typology } from '../types/contract';
 
 export const C = {
-  cream: '#FBF6EC', ivory: '#FFFDF8', sand: '#F1E6D2', line: '#E7DAC3',
-  espresso: '#2A1F16', cocoa: '#6B5A48', gold: '#B8862F', goldSoft: '#F3E2BC',
-  olive: '#5E7F4F', ochre: '#D9962B', terracotta: '#C0502F', slate: '#4F6D8A', stone: '#A79B8B',
+  cream: '#E9E8F8', ivory: '#F8F8FD', sand: '#DFDEF2', line: '#D5D4EC',
+  espresso: '#1C2541', cocoa: '#585F7E', gold: '#4677D2', goldSoft: '#DCE7FB',
+  olive: '#3B9A84', ochre: '#E39B32', terracotta: '#EC6C4E', slate: '#7083B8', stone: '#9EA2BC', coral: '#FF9475', teal: '#4677D2', tealSoft: '#DCE7FB',
 };
 export const F = { display: 'Fraunces, serif', ui: 'Manrope, sans-serif', mono: 'IBM Plex Mono, monospace' };
 
@@ -35,7 +36,7 @@ export function Page({ title, subtitle, actions, children }: { title: string; su
     <div style={{ padding: 32, maxWidth: 1280 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 280 }}>
-          <h1 style={{ fontFamily: F.display, fontSize: 40, color: C.espresso, fontWeight: 600, margin: 0 }}>{title}</h1>
+          <motion.h1 initial={{ opacity: 0, y: 14, filter: 'blur(8px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} style={{ fontFamily: F.display, fontSize: 40, color: C.espresso, fontWeight: 600, margin: 0 }}>{title}</motion.h1>
           {subtitle && <p style={{ fontFamily: F.ui, color: C.cocoa, marginTop: 6, marginBottom: 0, fontSize: 14 }}>{subtitle}</p>}
         </div>
         {actions}
@@ -45,9 +46,9 @@ export function Page({ title, subtitle, actions, children }: { title: string; su
   );
 }
 
-export function Card({ title, right, children, pad = 24, style }: { title?: ReactNode; right?: ReactNode; children: ReactNode; pad?: number; style?: CSSProperties }) {
+export function Card({ title, right, children, pad = 24, style, delay = 0 }: { title?: ReactNode; right?: ReactNode; children: ReactNode; pad?: number; style?: CSSProperties; delay?: number }) {
   return (
-    <div style={{ background: C.ivory, border: `1px solid ${C.line}`, borderRadius: 14, boxShadow: '0 1px 2px rgba(42,31,22,.04), 0 8px 24px rgba(42,31,22,.06)', overflow: 'hidden', ...style }}>
+    <motion.div initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-30px' }} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay }} style={{ background: C.ivory, border: `1px solid ${C.line}`, borderRadius: 14, boxShadow: '0 1px 2px rgba(28,37,65,.04), 0 8px 24px rgba(28,37,65,.06)', overflow: 'hidden', ...style }}>
       {title && (
         <div style={{ padding: '14px 24px', borderBottom: `1px solid ${C.line}`, display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontFamily: F.ui, fontWeight: 600, color: C.espresso, fontSize: 15, flex: 1 }}>{title}</span>
@@ -55,16 +56,27 @@ export function Card({ title, right, children, pad = 24, style }: { title?: Reac
         </div>
       )}
       <div style={{ padding: pad }}>{children}</div>
-    </div>
+    </motion.div>
   );
+}
+
+export function CountUp({ to, format = (v: number) => Math.round(v).toLocaleString('en-IN'), duration = 1.2 }: { to: number; format?: (v: number) => string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  useEffect(() => {
+    if (!inView || !ref.current) return;
+    const c = animate(0, to, { duration, ease: [0.22, 1, 0.36, 1], onUpdate: v => { if (ref.current) ref.current.textContent = format(v); } });
+    return () => c.stop();
+  }, [inView, to]);
+  return <span ref={ref}>{format(0)}</span>;
 }
 
 export function Stat({ label, value, color }: { label: string; value: ReactNode; color?: string }) {
   return (
-    <div style={{ background: C.ivory, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20 }}>
+    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }} whileHover={{ y: -3 }} style={{ background: C.ivory, border: `1px solid ${C.line}`, borderRadius: 14, padding: 20 }}>
       <div style={{ fontFamily: F.ui, fontSize: 12, color: C.cocoa, fontWeight: 500 }}>{label}</div>
-      <div style={{ fontFamily: F.display, fontSize: 28, fontWeight: 600, color: color ?? C.espresso, marginTop: 6 }}>{value}</div>
-    </div>
+      <div style={{ fontFamily: F.display, fontSize: 28, fontWeight: 600, color: color ?? C.espresso, marginTop: 6 }}>{typeof value === 'number' ? <CountUp to={value} /> : value}</div>
+    </motion.div>
   );
 }
 
@@ -73,10 +85,10 @@ export function Grid({ cols, children, gap = 16 }: { cols: number; children: Rea
 }
 
 const RISK: Record<string, { background: string; color: string }> = {
-  high: { background: '#F8E1D9', color: C.terracotta },
-  medium: { background: '#FBEBD0', color: C.ochre },
-  low: { background: '#E4EDDD', color: C.olive },
-  none: { background: '#F1ECE4', color: C.stone },
+  high: { background: '#FFE7DE', color: C.terracotta },
+  medium: { background: '#FCEED6', color: C.ochre },
+  low: { background: '#DCF0EA', color: C.olive },
+  none: { background: '#ECEBF6', color: C.stone },
 };
 export function RiskBadge({ level, score }: { level: string; score?: number | null }) {
   const s = RISK[level] ?? RISK.none;
@@ -89,7 +101,7 @@ export function RiskBadge({ level, score }: { level: string; score?: number | nu
 
 export function TypChip({ t }: { t: Typology | string }) {
   return (
-    <span style={{ background: C.goldSoft, color: '#7A5A1E', padding: '2px 10px', borderRadius: 10, fontSize: 12, fontWeight: 600, fontFamily: F.ui, whiteSpace: 'nowrap' }}>
+    <span style={{ background: C.goldSoft, color: '#4677D2', padding: '2px 10px', borderRadius: 10, fontSize: 12, fontWeight: 600, fontFamily: F.ui, whiteSpace: 'nowrap' }}>
       {TYPOLOGY_LABELS[t as Typology] ?? t}
     </span>
   );

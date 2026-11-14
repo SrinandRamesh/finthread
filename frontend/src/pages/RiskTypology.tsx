@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import PatternMorph from '../components/motion/PatternMorph';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { getClusters, getConfig } from '../api/endpoints';
 import { TYPOLOGY_LABELS, type Typology } from '../types/contract';
 import { C, F, Card, ErrorState, Grid, Loading, Page, mono, num, td, th, useLoad } from '../components/ui';
 
+const TYPS: Typology[] = ['FAN_IN', 'FAN_OUT', 'CYCLE', 'PASS_THROUGH', 'SCATTER_GATHER'];
+const SHORT: Record<Typology, string> = { FAN_IN: 'Fan-in', FAN_OUT: 'Fan-out', CYCLE: 'Cycle', PASS_THROUGH: 'Pass-through', SCATTER_GATHER: 'Scatter-gather' };
 const DEFINITIONS: Record<Typology, string> = {
   FAN_IN: 'Many different accounts send money to one account within a short window, typical of a collector gathering funds from mules.',
   FAN_OUT: 'One account splits money to many different accounts within a short window, typical of dispersal to mules (smurfing).',
@@ -23,6 +28,7 @@ const SCORING: [string, string, string][] = [
 export default function RiskTypology() {
   const clusters = useLoad(() => getClusters());
   const config = useLoad(getConfig);
+  const [active, setActive] = useState(0);
 
   if (clusters.loading || config.loading) return <Loading what="risk model" />;
   if (clusters.error) return <ErrorState error={clusters.error} status={clusters.status} onRetry={clusters.reload} />;
@@ -37,19 +43,41 @@ export default function RiskTypology() {
 
   return (
     <Page title="Risk & typology" subtitle="How FinThread labels patterns and builds each cluster's 0–100 risk score. Every point is explainable.">
-      <Grid cols={3}>
-        {(Object.keys(TYPOLOGY_LABELS) as Typology[]).map(t => (
-          <Link key={t} to={`/clusters?typology=${t}`} style={{ textDecoration: 'none' }}>
-            <Card style={{ height: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontFamily: F.ui, fontWeight: 700, color: C.espresso, fontSize: 15, flex: 1 }}>{TYPOLOGY_LABELS[t]}</span>
-                <span style={{ fontFamily: F.display, fontSize: 28, color: C.gold, fontWeight: 600 }}>{counts[t] ?? 0}</span>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', borderRadius: 24, overflow: 'hidden', border: `1px solid ${C.line}`, background: C.ivory, minHeight: 440 }}>
+        <div style={{ position: 'relative', background: 'linear-gradient(135deg, #4F7FD8 0%, #7DA6EA 70%, #F6B29E 140%)' }}>
+          <PatternMorph index={active} scale={0.36} />
+          <div style={{ position: 'absolute', left: 24, top: 22, fontFamily: F.mono, fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,.6)' }}>Pattern library</div>
+          <div style={{ position: 'absolute', left: 24, bottom: 22, right: 24 }}>
+            <AnimatePresence mode="wait">
+              <motion.div key={active} initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -12, filter: 'blur(10px)' }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
+                <div style={{ fontFamily: F.mono, fontSize: 12, color: C.coral, letterSpacing: '.08em' }}>0{active + 1} · {counts[TYPS[active]] ?? 0} clusters</div>
+                <div style={{ fontFamily: F.display, fontSize: 52, fontWeight: 600, color: C.cream, lineHeight: 1 }}>{SHORT[TYPS[active]]}</div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {TYPS.map((t, i) => (
+            <button key={t} onClick={() => setActive(i)} style={{ position: 'relative', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: 14, padding: '12px 14px' }}>
+              {active === i && <motion.span layoutId="typPill" transition={{ type: 'spring', stiffness: 380, damping: 32 }} style={{ position: 'absolute', inset: 0, borderRadius: 14, background: C.tealSoft }} />}
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                <span style={{ fontFamily: F.mono, fontSize: 12, color: active === i ? C.coral : C.stone }}>0{i + 1}</span>
+                <span style={{ fontFamily: F.ui, fontSize: 15, fontWeight: 700, color: C.espresso, flex: 1 }}>{TYPOLOGY_LABELS[t]}</span>
+                <span style={{ fontFamily: F.display, fontSize: 20, fontWeight: 600, color: C.teal }}>{counts[t] ?? 0}</span>
               </div>
-              <p style={{ fontFamily: F.ui, fontSize: 13, color: C.cocoa, lineHeight: 1.55, marginBottom: 0 }}>{DEFINITIONS[t]}</p>
-            </Card>
-          </Link>
-        ))}
-      </Grid>
+              <AnimatePresence initial={false}>
+                {active === i && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} style={{ position: 'relative', overflow: 'hidden' }}>
+                    <p style={{ fontFamily: F.ui, fontSize: 13, color: C.cocoa, lineHeight: 1.55, margin: '8px 0 6px 26px' }}>{DEFINITIONS[t]}</p>
+                    <Link to={`/clusters?typology=${t}`} style={{ marginLeft: 26, fontFamily: F.ui, fontSize: 12.5, fontWeight: 700, color: C.teal, textDecoration: 'none' }}>View these clusters →</Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          ))}
+        </div>
+      </motion.div>
 
       <Card title="Cluster risk score distribution" right={<span style={{ fontFamily: F.ui, fontSize: 12, color: C.cocoa }}>alert ≥ {alertAt} · high ≥ {highAt}</span>}>
         <div style={{ height: 240 }}>

@@ -6,17 +6,17 @@ import type { GraphOut, GraphNode, GraphEdge } from '../../types/contract';
 cytoscape.use(fcose);
 
 function nodeColor(level: string) {
-  if (level === 'high') return '#F8E1D9';
-  if (level === 'medium') return '#FBEBD0';
-  if (level === 'low') return '#E4EDDD';
-  return '#F1ECE4';
+  if (level === 'high') return '#FFE7DE';
+  if (level === 'medium') return '#FCEED6';
+  if (level === 'low') return '#DCF0EA';
+  return '#ECEBF6';
 }
 
 function nodeTextColor(level: string) {
-  if (level === 'high') return '#C0502F';
-  if (level === 'medium') return '#D9962B';
-  if (level === 'low') return '#5E7F4F';
-  return '#A79B8B';
+  if (level === 'high') return '#EC6C4E';
+  if (level === 'medium') return '#E39B32';
+  if (level === 'low') return '#3B9A84';
+  return '#9EA2BC';
 }
 
 interface Props {
@@ -65,7 +65,7 @@ export default function GraphCanvas({ graph, highlightIds, onNodeClick, onEdgeCl
           selector: 'node',
           style: {
             'background-color': (el: any) => nodeColor(el.data('risk_level')),
-            'border-color': (el: any) => el.data('is_suspicious') ? '#B8862F' : '#E7DAC3',
+            'border-color': (el: any) => el.data('is_suspicious') ? '#4677D2' : '#D5D4EC',
             'border-width': (el: any) => el.data('is_suspicious') ? 3 : 1,
             'width': (el: any) => Math.max(24, Math.min(60, 20 + Math.log10(el.data('total_in') + el.data('total_out') + 1) * 10)),
             'height': (el: any) => Math.max(24, Math.min(60, 20 + Math.log10(el.data('total_in') + el.data('total_out') + 1) * 10)),
@@ -78,14 +78,14 @@ export default function GraphCanvas({ graph, highlightIds, onNodeClick, onEdgeCl
         {
           selector: 'node:selected',
           style: {
-            'border-color': '#B8862F',
+            'border-color': '#4677D2',
             'border-width': 3,
           },
         },
         {
           selector: 'node.highlight',
           style: {
-            'border-color': '#B8862F',
+            'border-color': '#4677D2',
             'border-width': 3,
             'label': 'data(label)',
             'opacity': 1,
@@ -99,8 +99,8 @@ export default function GraphCanvas({ graph, highlightIds, onNodeClick, onEdgeCl
           selector: 'edge',
           style: {
             'width': (el: any) => Math.max(1, Math.min(6, Math.log10(el.data('amount') + 1))),
-            'line-color': (el: any) => el.data('is_suspicious') ? '#C0502F' : '#D8CBB5',
-            'target-arrow-color': (el: any) => el.data('is_suspicious') ? '#C0502F' : '#D8CBB5',
+            'line-color': (el: any) => el.data('is_suspicious') ? '#EC6C4E' : '#C8CAE4',
+            'target-arrow-color': (el: any) => el.data('is_suspicious') ? '#EC6C4E' : '#C8CAE4',
             'target-arrow-shape': 'triangle',
             'curve-style': 'bezier',
             'opacity': 0.8,
@@ -109,8 +109,8 @@ export default function GraphCanvas({ graph, highlightIds, onNodeClick, onEdgeCl
         {
           selector: 'edge.highlight',
           style: {
-            'line-color': '#B8862F',
-            'target-arrow-color': '#B8862F',
+            'line-color': '#4677D2',
+            'target-arrow-color': '#4677D2',
             'opacity': 1,
           },
         },
@@ -157,5 +157,5 @@ export default function GraphCanvas({ graph, highlightIds, onNodeClick, onEdgeCl
     });
   }, [highlightIds]);
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#FBF6EC', borderRadius: 14 }} />;
+  return <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#E9E8F8', borderRadius: 14 }} />;
 }

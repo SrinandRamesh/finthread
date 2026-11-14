@@ -1,27 +1,30 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
 
 @theme {
-  --color-cream: #FBF6EC;
-  --color-ivory: #FFFDF8;
-  --color-sand: #F1E6D2;
-  --color-line: #E7DAC3;
-  --color-espresso: #2A1F16;
-  --color-cocoa: #6B5A48;
-  --color-gold: #B8862F;
-  --color-gold-soft: #F3E2BC;
-  --color-olive: #5E7F4F;
-  --color-ochre: #D9962B;
-  --color-terracotta: #C0502F;
-  --color-slate-blue: #4F6D8A;
-  --color-stone: #A79B8B;
+  --color-cream: #E9E8F8;
+  --color-ivory: #F8F8FD;
+  --color-sand: #DFDEF2;
+  --color-line: #D5D4EC;
+  --color-espresso: #1C2541;
+  --color-cocoa: #585F7E;
+  --color-gold: #4677D2;
+  --color-gold-soft: #DCE7FB;
+  --color-olive: #3B9A84;
+  --color-ochre: #E39B32;
+  --color-terracotta: #EC6C4E;
+  --color-slate-blue: #7083B8;
+  --color-stone: #9EA2BC;
   --font-display: 'Fraunces', serif;
   --font-ui: 'Manrope', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 }
 
 body {
-  background-color: #FBF6EC;
-  color: #2A1F16;
+  background-color: #E9E8F8;
+  color: #1C2541;
   font-family: 'Manrope', sans-serif;
 }
+::selection{background:#FF9475;color:#fff}
+
+.ft-nav:hover{color:#E9E8F8 !important;background:rgba(255,255,255,.06)}
