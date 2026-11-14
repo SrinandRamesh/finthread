@@ -1,17 +1,13 @@
-"""TEMPORARY STUB created by the Integration Lead at kickoff.
-Member 3 owns this package and replaces this file on feat/intel.
-Signatures are fixed by PROJECT_CONTRACT.md Section 7."""
-from app.config import Settings
-from app.contracts import AccountRisk, AlertRecord, DetectionOutput, ScoredCluster
+"""Risk intelligence package (Member 3).
 
+Public API called by Member 2's pipeline.py:
+    score_clusters(detection, cfg)   -> list[ScoredCluster]
+    build_alerts(clusters, cfg)      -> list[AlertRecord]
+    compute_account_risk(clusters)   -> dict[str, AccountRisk]
+"""
+from __future__ import annotations
 
-def score_clusters(detection: DetectionOutput, cfg: Settings) -> list[ScoredCluster]:
-    return []
+from app.intelligence.alerts import build_alerts, compute_account_risk
+from app.intelligence.risk import score_clusters
 
-
-def build_alerts(clusters: list[ScoredCluster], cfg: Settings) -> list[AlertRecord]:
-    return []
-
-
-def compute_account_risk(clusters: list[ScoredCluster]) -> dict[str, AccountRisk]:
-    return {}
+__all__ = ["score_clusters", "build_alerts", "compute_account_risk"]
